@@ -1,0 +1,55 @@
+body, html {
+  margin: 0;
+  height: 100%;
+}
+canvas {
+  display: block;
+  margin: auto;
+}
+.main {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+.main .level {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 80%;
+  border: 1px solid blue;
+}
+.main .toolbox {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 20%;
+  border: 1px solid red;
+  display: block;
+  overflow: scroll;
+}
+.main .tools {
+  margin: 10px;
+  list-style: none;
+}
+.main .tools li {
+  float: left;
+  width: 80px;
+  height: 80px;
+  display: block;
+}
+.main .tools li img {
+  position: relative;
+  border: 6px solid transparent;
+  border-radius: 15px;
+}
+.main .tools li:hover img {
+  border: 6px solid #3070bb;
+}
+.main .tools li.selected img {
+  border: 6px solid #f33;
+}
