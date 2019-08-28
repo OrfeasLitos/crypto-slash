@@ -5,36 +5,37 @@ const canvas = document.getElementById('canvas')
 const ctx = canvas.getContext('2d')
 
 class Tile {
-  constructor(name, src, onloaded) {
+  constructor(name, src) {
     this.img = new Image()
     this.src = src
+  }
 
-    this.img.addEventListener('load', onloaded)
-    this.img.src = src
+  load() {
+    return new Promise((resolve, reject) => {
+      this.img.addEventListener('load', resolve)
+      this.img.src = this.src
+    })
   }
 }
 
 class TilesDB {
   constructor() {
-    this.numLoaded = 0
     this.tiles = {}
   }
 
   _loadTile(tileName) {
     const src = '../../resources/tiles/' + tileName + '.png'
-    this.tiles[tileName] = new Tile(tileName, src, () => {
-      ++this.numLoaded
-      if (this.numLoaded == resources.tiles.length) {
-        this.onloaded()
-      }
-    })
+    const tile = new Tile(tileName, src)
+    this.tiles[tileName] = tile
+    return tile.load()
   }
 
-  load(onloaded) {
-    this.onloaded = onloaded
+  async load() {
+    const loadPromises = []
     for (const tile of resources.tiles) {
-      this._loadTile(tile)
+      loadPromises.push(this._loadTile(tile))
     }
+    await Promise.all(loadPromises)
   }
 
   getTile(tile) {
@@ -83,8 +84,6 @@ class Toolbox {
     }
   }
 }
-
-// TODO: async/await
 
 let TILE_W = 80, TILE_H = 80
 const level = [['box', 'box', 'bridge'], ['bridge', 'bridge', 'box'], ['box', 'box', 'box']]
@@ -140,9 +139,10 @@ function resize() {
 const toolbox = new Toolbox(resources.tiles)
 const tilesDB = new TilesDB()
 
-tilesDB.load(() => {
+;(async () => {
+  await tilesDB.load()
   toolbox.init()
   render()
   window.addEventListener('resize', resize)
   resize()
-})
+})()
