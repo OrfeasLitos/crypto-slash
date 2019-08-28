@@ -1,6 +1,5 @@
-// TODO: use proper "imports"
 // TODO: typescript
-
+import {resources} from './resources.mjs'
 const canvas = document.getElementById('canvas')
 const ctx = canvas.getContext('2d')
 

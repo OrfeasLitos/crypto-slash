@@ -1,5 +1,4 @@
-// TODO: rename to resources.json
-const resources = {
+export const resources = {
   "tiles": [
     "box",
     "boxAlt",
