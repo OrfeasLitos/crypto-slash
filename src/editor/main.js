@@ -3,44 +3,61 @@
 
 const canvas = document.getElementById('canvas')
 const ctx = canvas.getContext('2d')
-const tiles = {}
-let selectedLi = null
-let selectedTile = null
 
-// TODO: async/await
-function loadTiles(onloaded) {
-  const ul = document.getElementsByClassName('tools')[0]
-  let numLoaded = 0
+class Toolbox {
+  constructor(tiles) {
+    this.tiles = tiles
+    this.selectedLi = null
+    this.selectedTile = null
+    this.ul = document.getElementsByClassName('tools')[0]
+    this.tileToImage = {}
+    this.numLoaded = 0
+  }
 
-  for (const tile of resources.tiles) {
+  drawTile(tile, onloaded) {
     const li = document.createElement('li')
     const img = new Image()
 
     img.addEventListener('load', () => {
-      ++numLoaded
-      if (numLoaded == resources.tiles.length) {
+      ++this.numLoaded
+      if (this.numLoaded == this.tiles.length) {
         onloaded()
       }
     })
     img.src = '../../resources/tiles/' + tile + '.png'
     img.id = 'tile-' + tile
     img.tile = tile
-    tiles[tile] = img
+    this.tileToImage[tile] = img
+
+    li.appendChild(img)
+    this.ul.appendChild(li)
+  }
+
+  registerTool(tile) {
+    const img = this.tileToImage[tile]
     img.addEventListener('click', (e) => {
-      if (selectedLi != null) {
-        selectedLi.className = ''
+      if (this.selectedLi != null) {
+        this.selectedLi.className = ''
       }
       e.target.parentNode.className = 'selected'
-      selectedLi = e.target.parentNode
-      selectedTile = e.target.tile
+      this.selectedLi = e.target.parentNode
+      this.selectedTile = e.target.tile
     })
-    li.appendChild(img)
-    ul.appendChild(li)
+  }
+
+  loadTiles(onloaded) {
+  //resources.eraser
+    for (const tile of this.tiles) {
+      this.drawTile(tile, onloaded)
+      this.registerTool(tile)
+    }
   }
 }
 
+// TODO: async/await
+
 let TILE_W = 80, TILE_H = 80
-let level = [['box', 'box', 'bridge'], ['bridge', 'bridge', 'box'], ['box', 'box', 'box']]
+const level = [['box', 'box', 'bridge'], ['bridge', 'bridge', 'box'], ['box', 'box', 'box']]
 let drawing = false
 
 function hitTest(x, y) {
@@ -57,12 +74,13 @@ function mousemove(e) {
     if (!(x in level)) {
       level[x] = []
     }
-    level[x][y] = selectedTile
-    render()
+    level[x][y] = toolbox.selectedTile
+    render(toolbox.tileToImage)
   }
 }
+
 canvas.addEventListener('mousedown', (e) => {
-  if (selectedTile != null) {
+  if (toolbox.selectedTile != null) {
     drawing = true
   }
   mousemove(e)
@@ -72,26 +90,30 @@ canvas.addEventListener('mouseup', () => {
   drawing = false
 })
 
-function render() {
+function render(tileToImage) {
   ctx.clearRect(0, 0, canvas.width, canvas.height)
   for (const i in level) {
     const row = level[i]
     for (const j in row) {
       const tile = row[j]
-      ctx.drawImage(tiles[tile], i * TILE_W, j * TILE_H, TILE_W, TILE_H)
+      ctx.drawImage(tileToImage[tile], i * TILE_W, j * TILE_H, TILE_W, TILE_H)
     }
   }
 }
 
-function resize() {
+function resize(tileToImage) {
   const levelEl = document.getElementsByClassName('level')[0]
   canvas.width = levelEl.offsetWidth
   canvas.height = levelEl.offsetHeight
-  render()
+  render(tileToImage)
 }
 
-loadTiles(() => {
-  render()
-  window.addEventListener('resize', resize)
-  resize()
+const toolbox = new Toolbox(resources.tiles)
+
+toolbox.loadTiles(() => {
+  render(toolbox.tileToImage)
+  window.addEventListener('resize', () => {
+    resize(toolbox.tileToImage)
+  })
+  resize(toolbox.tileToImage)
 })
