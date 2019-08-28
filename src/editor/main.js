@@ -73,6 +73,7 @@ canvas.addEventListener('mouseup', () => {
 })
 
 function render() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
   for (const i in level) {
     const row = level[i]
     for (const j in row) {
