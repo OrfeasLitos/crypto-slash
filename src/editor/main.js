@@ -4,6 +4,33 @@
 const canvas = document.getElementById('canvas')
 const ctx = canvas.getContext('2d')
 
+let TILE_W = 80, TILE_H = 80
+let drawing = false
+
+class Level {
+  constructor() {
+    this.board = [['box', 'box', 'bridge'], ['bridge', 'bridge', 'box'], ['box', 'box', 'box']]
+  }
+
+  setLocation(x, y, tileName) {
+    if (!(y in this.board)) {
+      this.board[y] = []
+    }
+    this.board[y][x] = tileName
+  }
+
+  map(f) {
+    for (const i in this.board) {
+      const row = this.board[i]
+      for (const j in row) {
+        const tileName = row[j]
+        f(i, j, tileName)
+      }
+    }
+  }
+}
+const level = new Level()
+
 class Tile {
   constructor(name, src) {
     this.img = new Image()
@@ -91,10 +118,6 @@ class Toolbox {
   }
 }
 
-let TILE_W = 80, TILE_H = 80
-const level = [['box', 'box', 'bridge'], ['bridge', 'bridge', 'box'], ['box', 'box', 'box']]
-let drawing = false
-
 function hitTest(x, y) {
   return [Math.floor(x / TILE_W), Math.floor(y / TILE_H)]
 }
@@ -105,10 +128,7 @@ function mousemove(e) {
       e.clientX - e.target.offsetLeft,
       e.clientY - e.target.offsetTop
     )
-    if (!(x in level)) {
-      level[x] = []
-    }
-    level[x][y] = toolbox.selectedTile
+    level.setLocation(x, y, toolbox.selectedTile)
   }
 }
 
@@ -126,16 +146,12 @@ canvas.addEventListener('mouseup', () => {
 function render() {
   requestAnimationFrame(render)
   ctx.clearRect(0, 0, canvas.width, canvas.height)
-  for (const i in level) {
-    const row = level[i]
-    for (const j in row) {
-      const tileName = row[j]
-      const tile = tilesDB.getTile(tileName)
-      if (tile.loaded) {
-        ctx.drawImage(tile.img, i * TILE_W, j * TILE_H, TILE_W, TILE_H)
-      }
+  level.map((y, x, tileName) => {
+    const tile = tilesDB.getTile(tileName)
+    if (tile.loaded) {
+      ctx.drawImage(tile.img, x * TILE_W, y * TILE_H, TILE_W, TILE_H)
     }
-  }
+  })
 }
 
 function resize() {
