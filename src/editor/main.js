@@ -8,11 +8,15 @@ class Tile {
   constructor(name, src) {
     this.img = new Image()
     this.src = src
+    this.loaded = false
   }
 
   load() {
     return new Promise((resolve, reject) => {
-      this.img.addEventListener('load', resolve)
+      this.img.addEventListener('load', () => {
+        this.loaded = true
+        resolve()
+      })
       this.img.src = this.src
     })
   }
@@ -21,6 +25,7 @@ class Tile {
 class TilesDB {
   constructor() {
     this.tiles = {}
+    this.loaded = false
   }
 
   _loadTile(tileName) {
@@ -36,6 +41,7 @@ class TilesDB {
       loadPromises.push(this._loadTile(tile))
     }
     await Promise.all(loadPromises)
+    this.loaded = true
   }
 
   getTile(tile) {
@@ -103,7 +109,6 @@ function mousemove(e) {
       level[x] = []
     }
     level[x][y] = toolbox.selectedTile
-    render()
   }
 }
 
@@ -119,12 +124,16 @@ canvas.addEventListener('mouseup', () => {
 })
 
 function render() {
+  requestAnimationFrame(render)
   ctx.clearRect(0, 0, canvas.width, canvas.height)
   for (const i in level) {
     const row = level[i]
     for (const j in row) {
-      const tile = row[j]
-      ctx.drawImage(tilesDB.getTile(tile).img, i * TILE_W, j * TILE_H, TILE_W, TILE_H)
+      const tileName = row[j]
+      const tile = tilesDB.getTile(tileName)
+      if (tile.loaded) {
+        ctx.drawImage(tile.img, i * TILE_W, j * TILE_H, TILE_W, TILE_H)
+      }
     }
   }
 }
@@ -133,16 +142,16 @@ function resize() {
   const levelEl = document.getElementsByClassName('level')[0]
   canvas.width = levelEl.offsetWidth
   canvas.height = levelEl.offsetHeight
-  render()
 }
 
 const toolbox = new Toolbox(resources.tiles)
 const tilesDB = new TilesDB()
 
 ;(async () => {
-  await tilesDB.load()
-  toolbox.init()
-  render()
-  window.addEventListener('resize', resize)
+  const loaded = tilesDB.load()
   resize()
+  render()
+  await loaded
+  toolbox.init()
+  window.addEventListener('resize', resize)
 })()
