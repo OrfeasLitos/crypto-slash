@@ -4,36 +4,41 @@
 const canvas = document.getElementById('canvas')
 const ctx = canvas.getContext('2d')
 
+class Tile {
+  constructor(name, src, onloaded) {
+    this.img = new Image()
+    this.src = src
+
+    this.img.addEventListener('load', onloaded)
+    this.img.src = src
+  }
+}
+
 class TilesDB {
   constructor() {
     this.numLoaded = 0
-    this.tiles = resources.tiles
-    this.tileToImage = {}
+    this.tiles = {}
   }
 
-  _loadTile(tile) {
-    const img = new Image()
-
-    img.addEventListener('load', () => {
+  _loadTile(tileName) {
+    const src = '../../resources/tiles/' + tileName + '.png'
+    this.tiles[tileName] = new Tile(tileName, src, () => {
       ++this.numLoaded
-      if (this.numLoaded == this.tiles.length) {
+      if (this.numLoaded == resources.tiles.length) {
         this.onloaded()
       }
     })
-    img.src = '../../resources/tiles/' + tile + '.png'
-    this.tileToImage[tile] = img
   }
 
   load(onloaded) {
     this.onloaded = onloaded
-    for (const tile of this.tiles) {
+    for (const tile of resources.tiles) {
       this._loadTile(tile)
     }
-    onloaded()
   }
 
-  getTileImage(tile) {
-    return this.tileToImage[tile]
+  getTile(tile) {
+    return this.tiles[tile]
   }
 }
 
@@ -48,7 +53,7 @@ class Toolbox {
 
   drawTile(tile) {
     const li = document.createElement('li')
-    const src = tilesDB.getTileImage(tile).src
+    const src = tilesDB.getTile(tile).src
     const img = new Image()
     img.src = src
     this.images[tile] = img
@@ -95,7 +100,6 @@ function mousemove(e) {
       e.clientX - e.target.offsetLeft,
       e.clientY - e.target.offsetTop
     )
-    console.log(x, y)
     if (!(x in level)) {
       level[x] = []
     }
@@ -121,7 +125,7 @@ function render() {
     const row = level[i]
     for (const j in row) {
       const tile = row[j]
-      ctx.drawImage(tilesDB.getTileImage(tile), i * TILE_W, j * TILE_H, TILE_W, TILE_H)
+      ctx.drawImage(tilesDB.getTile(tile).img, i * TILE_W, j * TILE_H, TILE_W, TILE_H)
     }
   }
 }
